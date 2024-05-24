@@ -64,6 +64,13 @@ class Apilot(Plugin):
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
+        if content == "风景":
+            content_scenery = self.get_scenery()
+            reply_type = ReplyType.IMAGE_URL
+            reply = self.create_reply(reply_type, content_scenery)
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            return
         if content == "acg":
             acg_url = self.get_acg(self.alapi_token)
             reply_type = ReplyType.IMAGE_URL
@@ -251,7 +258,16 @@ class Apilot(Plugin):
                     return "周末无需摸鱼，愉快玩耍吧"
             else:
                 return "暂无可用“摸鱼”服务，认真上班"
-                
+
+    def get_scenery(self):
+        url = BASE_URL_VVHAN + "wallpaper/views?type=json"
+        payload = "format=json"
+        headers = {'Content-Type': "application/x-www-form-urlencoded"}
+        scenery_info = self.make_request(url, method="POST", headers=headers, data=payload)
+        # 验证请求是否成功
+        if isinstance(scenery_info, dict) and scenery_info['success']:
+            return scenery_info['url']
+            
     def get_soul(self,alapi_token):
             url = BASE_URL_ALAPI + "soul"
             data = {
