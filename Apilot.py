@@ -57,6 +57,20 @@ class Apilot(Plugin):
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
+        if content == "鸡汤":
+            content_soul = self.get_soul(self.alapi_token)
+            reply_type = ReplyType.TEXT
+            reply = self.create_reply(reply_type, content_soul)
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            return
+        if content == "acg":
+            acg_url = self.get_acg(self.alapi_token)
+            reply_type = ReplyType.IMAGE_URL
+            reply = self.create_reply(reply_type, acg_url)
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            return
         if content == "摸鱼":
             moyu = self.get_moyu_calendar()
             reply_type = ReplyType.IMAGE_URL if self.is_valid_url(moyu) else ReplyType.TEXT
@@ -237,7 +251,41 @@ class Apilot(Plugin):
                     return "周末无需摸鱼，愉快玩耍吧"
             else:
                 return "暂无可用“摸鱼”服务，认真上班"
+                
+    def get_soul(self,alapi_token):
+            url = BASE_URL_ALAPI + "soul"
+            data = {
+                "token": alapi_token,
+                "format": "json"
+            }
+            headers = {'Content-Type': "application/x-www-form-urlencoded"}
+            try:
+                soul_info = self.make_request(url, method="POST", headers=headers, data=data)
+                if isinstance(soul_info, dict) and soul_info.get('code') == 200:
+                    soul_content = soul_info['data']['content']
+                    return soul_content
+                else:
+                    return self.handle_error(soul_info, "鸡汤傻了，请检查 token 是否有误")
+            except Exception as e:
+                return self.handle_error(e, "鸡汤获取失败")
 
+    def get_acg(self,alapi_token):
+            url = BASE_URL_ALAPI + "acg"
+            data = {
+                "token": alapi_token,
+                "format": "json"
+            }
+            headers = {'Content-Type': "application/x-www-form-urlencoded"}
+            try:
+                acg_info = self.make_request(url, method="POST", headers=headers, data=data)
+                if isinstance(acg_info, dict) and acg_info.get('code') == 200:
+                    acg_url = soul_info['data']['url']
+                    return acg_url
+                else:
+                    return self.handle_error(soul_info, "acg傻了，请检查 token 是否有误")
+            except Exception as e:
+                return self.handle_error(e, "acg获取失败")
+                
     def get_moyu_calendar_video(self):
         url = "https://dayu.qqsuu.cn/moyuribaoshipin/apis.php?type=json"
         payload = "format=json"
