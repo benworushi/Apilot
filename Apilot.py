@@ -327,10 +327,10 @@ class Apilot(Plugin):
             try:
                 wy_info = self.make_request(url, method="POST", headers=headers, data=data)
                 if isinstance(wy_info, dict) and wy_info.get('code') == 200:
-                    wy_content =  f"歌曲:{joke_info['data']['title']}\n歌手:{joke_info['data']['author']}\n精彩评论:{joke_info['data']['comment_content']}"
+                    wy_content =  f"歌曲:{wy_info['data']['title']}\n歌手:{wy_info['data']['author']}\n精彩评论:{wy_info['data']['comment_content']}"
                     return wy_content
                 else:
-                    return self.handle_error(soul_info, "鸡汤傻了，请检查 token 是否有误")
+                    return self.handle_error(wy_info, "鸡汤傻了，请检查 token 是否有误")
             except Exception as e:
                 return self.handle_error(e, "鸡汤获取失败")
                 
