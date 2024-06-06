@@ -72,7 +72,7 @@ class Apilot(Plugin):
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
         if content == "笑话":
-            content_joke = self.get_joke()
+            content_joke = self.get_joke(self.alapi_token)
             reply_type = ReplyType.TEXT
             reply = self.create_reply(reply_type, content_joke)
             e_context["reply"] = reply
