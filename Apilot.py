@@ -71,10 +71,24 @@ class Apilot(Plugin):
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
+        if content == "笑话":
+            content_joke = self.get_joke()
+            reply_type = ReplyType.TEXT
+            reply = self.create_reply(reply_type, content_joke)
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            return
         if content == "acg":
             acg_url = self.get_acg(self.alapi_token)
             reply_type = ReplyType.IMAGE_URL
             reply = self.create_reply(reply_type, acg_url)
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            return
+        if content == "网抑云":
+            content_wy = self.get_wy(self.alapi_token)
+            reply_type = ReplyType.TEXT
+            reply = self.create_reply(reply_type, content_wy)
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
@@ -285,6 +299,41 @@ class Apilot(Plugin):
             except Exception as e:
                 return self.handle_error(e, "鸡汤获取失败")
 
+    def get_joke(self,alapi_token):
+            url = BASE_URL_ALAPI + "joke/random"
+            data = {
+                "token": alapi_token,
+                "format": "json"
+            }
+            headers = {'Content-Type': "application/x-www-form-urlencoded"}
+            try:
+                joke_info = self.make_request(url, method="POST", headers=headers, data=data)
+                if isinstance(joke_info, dict) and joke_info.get('code') == 200:
+                    joke_content = joke_info['data']['content']
+                    return joke_content
+                else:
+                    return self.handle_error(soul_info, "鸡汤傻了，请检查 token 是否有误")
+            except Exception as e:
+                return self.handle_error(e, "鸡汤获取失败")
+
+    
+    def get_wy(self,alapi_token):
+            url = BASE_URL_ALAPI + "comment"
+            data = {
+                "token": alapi_token,
+                "format": "json"
+            }
+            headers = {'Content-Type': "application/x-www-form-urlencoded"}
+            try:
+                wy_info = self.make_request(url, method="POST", headers=headers, data=data)
+                if isinstance(wy_info, dict) and wy_info.get('code') == 200:
+                    wy_content =  f"歌曲:{joke_info['data']['title']}\n歌手:{joke_info['data']['author']}\n精彩评论:{joke_info['data']['comment_content']}"
+                    return wy_content
+                else:
+                    return self.handle_error(soul_info, "鸡汤傻了，请检查 token 是否有误")
+            except Exception as e:
+                return self.handle_error(e, "鸡汤获取失败")
+                
     def get_acg(self,alapi_token):
             url = BASE_URL_ALAPI + "acg"
             data = {
