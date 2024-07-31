@@ -2,6 +2,7 @@ import plugins
 import requests
 import re
 import json
+import random
 from urllib.parse import urlparse
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
@@ -162,7 +163,16 @@ class Apilot(Plugin):
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
-
+        qixiang_match = re.search(r'(今日|明日).*?([\u4e00-\u9fa5]+市).*(日落|日出)', content)
+        if qixiang_match:
+            city = qixiang_match.group(2) 
+            date = qixiang_match.group(1)
+            type = qixiang_match.group(3)
+            content = self.get_qixiang(date,city,type)
+            reply = self.create_reply(ReplyType.TEXT, content)
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            return
 
         # 天气查询
         weather_match = re.match(r'^(?:(.{2,7}?)(?:市|县|区|镇)?|(\d{7,9}))(:?今天|明天|后天|7天|七天)?(?:的)?天气$', content)
@@ -299,6 +309,33 @@ class Apilot(Plugin):
             except Exception as e:
                 return self.handle_error(e, "鸡汤获取失败")
 
+    def get_qixiang(self,date,city,type):
+            random_number = random.randint(1000000, 9999999)
+            url = "https://sunsetbot.top/?query_id="+str(random_number)+"&intend=select_city&query_city="+city+"&event_date=None&event=rise_1&times=None"
+            if type=="日落":
+                type="set"
+            else :
+                type="rise"
+            if date=="今日":
+                date="1"
+            else :
+                date="2"
+            url = "https://sunsetbot.top/?query_id="+str(random_number)+"&intend=select_city&query_city="+city+"&event_date=None&event="+type+"_"+date+"&times=None"   
+            headers = {'Content-Type': "application/x-www-form-urlencoded"}
+            try:
+                qixiang_info = self.make_request(url, method="GET")
+                if qixiang_info["status"] == "ok":
+                    qixiang_content = qixiang_info
+                    qixiang_text += "  🌅 早报: 发送“早报”获取早报。\n"
+                    qixiang_text += "  🐟 摸鱼: 发送“摸鱼”获取摸鱼人日历。\n"
+                    qixiang_text += "  🔥 热榜: 发送“xx热榜”查看支持的热榜。\n"
+                    qixiang_text += "  🔥 八卦: 发送“八卦”获取明星八卦。\n"
+                    return qixiang_content
+                else:
+                    return self.handle_error(qixiang_info, "气象傻了，请检查 token 是否有误")
+            except Exception as e:
+                return self.handle_error(e, "气象获取失败")
+                
     def get_joke(self,alapi_token):
             url = BASE_URL_ALAPI + "joke/random"
             data = {
